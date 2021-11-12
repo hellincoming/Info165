@@ -1,0 +1,202 @@
+package Codigo;
+import java_cup.runtime.*;
+import javax.swing.*;
+import java.awt.*;
+action code {:
+
+	JFrame ventana = new JFrame("Area de dibujo");
+	PanelDibujo panel = new PanelDibujo();
+	String [][] tablaN = new String[10][2];
+	String [][] tablaC = new String[10][2];
+	
+	public void llenar(){
+		for(int i=0;i<10;i++){
+			for(int j=0;j<2;j++){
+				tablaN[i][j]="-1";
+				tablaC[i][j]="0";
+			}
+		}
+	}
+
+	// Metodo que agrega una variable numero al arreglo de numeros y guarda su valor
+	// verifica si no existe antes, de existir actualiza el valor
+	public void agregarN(String simbolo, String valor){
+		int c=0;
+		while(c<10 && !tablaC[c][0].equals(simbolo)) c++;
+		if(c==10){
+			c=0;
+			while(!tablaN[c][0].equals("-1") && !tablaN[c][0].equals(simbolo)){
+				c++;
+			}
+			if(!tablaN[c][0].equals(simbolo)){
+				tablaN[c][0]=simbolo;
+				tablaN[c][1]=valor;
+			}
+			else{
+				tablaN[c][1]=valor;
+			}
+		}
+		else{
+			System.out.println("ERROR: No se puede asignar un numero a la variable: "+simbolo+" de tipo color");
+		}
+	}
+	// Metodo que agrega una variable color al arreglo de colores y guarda su valor
+	// verifica si no esta antes, y de estarlo lo actualiza
+	public void agregarC(String simbolo, String valor){
+		int c=0;
+		while(c<10 && !tablaN[c][0].equals(simbolo)) c++;
+		if(c==10){
+			c=0;
+			while(!tablaC[c][0].equals("0") && !tablaC[c][0].equals(simbolo)){
+				c++;
+			}
+			if(!tablaC[c][0].equals(simbolo)){
+				tablaC[c][0]=simbolo;
+				tablaC[c][1]=valor;
+			}
+			else{
+				tablaC[c][1]=valor;
+			}
+		}
+		else{
+System.out.println("ERROR: No se puede asignar un color a la variable: "+simbolo +" de tipo numero");
+		}
+	}
+
+	// Metodo que busca el valor de una variable numero
+	public String buscarN(String variable){
+		int c=0;
+		while(c<10 && !tablaN[c][0].equals(variable)){
+			c++;
+		}
+		if(c<10 && !tablaN[c][0].equals("-1")){
+			return tablaN[c][1];
+		}
+		else{
+			return variable;
+		}
+	}
+
+	// Metodo que busca el valor de una variable color
+	public String buscarC(String variable){
+		int c=0;
+		while(c<10 && !tablaC[c][0].equals(variable)){
+			c++;
+		}
+		if(c<10 && !tablaC[c][0].equals("0")){
+			return tablaC[c][1];
+		}
+		else{
+			return variable;
+		}
+	}
+	// Metodo que imprime los arreglos de numeros y colores
+	// usado solo para fines de prueba
+	public void imprime(){
+		for(int i=0;i<10;i++){
+			for(int j=0;j<2;j++){
+				System.out.print(tablaN[i][j]+" ");
+			}
+			System.out.println("");
+		}
+		System.out.println("");
+		for(int i=0;i<10;i++){
+			for(int j=0;j<2;j++){
+				System.out.print(tablaC[i][j]+" ");
+			}
+			System.out.println("");
+		}
+	}
+
+	// Metodo que inicializa la ventana y sus valores
+	public void crearVentana(){	
+		ventana.setSize(400,400);
+		ventana.add(panel);
+		ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		ventana.setResizable(false);
+		ventana.setVisible(true);
+		ventana.setLocationRelativeTo(null);
+	}
+:}
+
+parser code {:
+	// Metodo principal del parser
+	public static void main(String args[]) throws Exception {
+		new parser(new Yylex(System.in)).parse();
+	}
+:}
+
+ 
+/*��� Declaraci�n de la lista de s�mbolos de la gram�tica �����*/
+
+/* Terminales */
+terminal ParA,ParC,Coma,VAR;
+terminal Dibujar,Fin,Igual,Linea,Cuadro,Redondo,Triangulo,Color,Asignar,Relleno;
+terminal Integer Cons;
+terminal String Rojo;
+terminal String Amarillo;
+terminal String Blanco;
+terminal String Azul;
+terminal String Verde;
+
+/* Variables */
+non terminal S,inst,inst_dib,inst_color,inst_asig,inst_asig_color,inst_asig_num,Inst_Linea,Inst_Cuadro,Inst_Redondo,Inst_Triangulo,Inst_Relleno,Si,No, A,B,C,D;
+
+//A numero o Variable, B Variables, C Color, D Si, No
+S ::= {: crearVentana();llenar(); :} Dibujar inst Fin ;
+
+inst     ::= inst_dib inst | inst_asig inst | inst_dib | inst_asig;
+
+inst_dib ::= Inst_Linea | Inst_Redondo | Inst_Cuadro| Inst_Triangulo;
+
+inst_asig ::= inst_color | inst_asig_color | inst_asig_num | Inst_Relleno; 
+
+inst_color::= Color ParA C:a{:panel.asignarColor(a.toString());:} ParC {:
+panel.aColor(gColor.toString());:}|Color ParA B:a{:panel.aColor(a.toString());:} ParC {:
+
+inst_asig_color::= Asignar B:b Igual C:c {: asignarC(b.toString(),c.toString());:};
+
+inst_asig_num::= Asignar B:b Igual A:a {:agregarN(b.toString(),a.toString()); :};
+
+Inst_Linea   ::= Linea ParA A:a Coma A:b Coma A:c Coma A:d {:
+    String respuestaA = buscarN(a.toString());
+    String respuestaB = buscarN(b.toString());
+    String respuestaC = buscarN(c.toString());
+    String respuestaD = buscarN(d.toString());
+    panel.linea(Integer.parseInt(respuestaA),Integer.parseInt(respuestaB),Integer.parseInt(respuestaC),Integer.parseInt(respuestaD)); :}  ParC;
+			
+Inst_Cuadro   ::= Cuadro ParA A:a Coma A:b Coma A:c Coma A:d {:
+    String respuestaA = buscarN(a.toString());
+    String respuestaB = buscarN(b.toString());
+    String respuestaC = buscarN(c.toString());
+    String respuestaD = buscarN(d.toString());
+    panel.cuadro(Integer.parseInt(respuestaA),Integer.parseInt(respuestaB),Integer.parseInt(respuestaC),Integer.parseInt(respuestaD)); :}  ParC;		
+
+Inst_Redondo   ::= Redondo ParA A:a Coma A:b Coma A:c {:
+    String respuestaA = buscarN(a.toString());
+    String respuestaB = buscarN(b.toString());
+    String respuestaC = buscarN(c.toString());
+    panel.circulo(Integer.parseInt(respuestaA),Integer.parseInt(respuestaB),Integer.parseInt(respuestaC); :}  ParC;
+						
+Inst_Triangulo ::= Triangulo ParA A:a Coma A:b Coma A:c Coma A:d Coma A:e Coma A:f {: // se buscan los valores en el arreglo de numeros, de no encontrarse se retorna el valor mismo y se grafica en la ventana
+    String respuestaA = buscarN(a.toString());
+    String respuestaB = buscarN(b.toString());
+    String respuestaC = buscarN(c.toString());
+    String respuestaD = buscarN(d.toString());
+    String respuestaE = buscarN(e.toString());
+    String respuestaF = buscarN(f.toString());
+    panel.triangulo(Integer.parseInt(respuestaA),Integer.parseInt(respuestaB),Integer.parseInt(respuestaC),Integer.parseInt(respuestaD),Integer.parseInt(respuestaE),Integer.parseInt(respuestaF)); :} ParC; 
+
+Inst_Relleno ::= Relleno ParA D:d {:panel.aRelleno(d.toString();:} ParC ; 
+//Añadir aRelleno
+
+A ::= Cons:n {: RESULT=n; :} | VAR:a {: RESULT=a; :};
+
+B ::= VAR:a {: RESULT=a; :};
+
+C ::= Rojo:r {: RESULT="rojo"; :} | Verde:v {: RESULT="verde"; :} | Azul:a    {: 
+RESULT="azul"; :} | Amarillo:a {: RESULT="amarillo"; :} |Blanco:b {: RESULT="blanco"; :};
+
+D ::= Si:y {: RESULT="Si"; :} | No:n {: RESULT="No"; :};
+
+
